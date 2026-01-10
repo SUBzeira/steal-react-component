@@ -27,12 +27,18 @@ Clone entire websites by combining component extraction, style extraction, and a
 
 ## Installation
 
-This skill uses a **two-file architecture** for token efficiency:
+This skill uses a **two-file architecture** for context isolation:
 
-- **SKILL.md**: Lightweight dispatcher (~200 tokens) - loaded into main agent context
+- **SKILL.md**: Lightweight dispatcher (~300 tokens) - loaded into main agent context
 - **AGENT.md**: Full extraction instructions (~4k tokens) - loaded only when subagent spawns
 
-This saves ~7k tokens per invocation compared to embedding all instructions in the skill.
+### Why Subagent Architecture?
+
+The subagent runs in isolated context, keeping the main agent's context clean. A typical extraction:
+- **Main agent**: ~6k tokens (dispatcher + subagent response summary)
+- **Subagent**: ~36k tokens internally (browser automation, React introspection, reconstruction)
+
+Without the subagent, all ~36k tokens would accumulate in the main agent's context, quickly filling it up after a few extractions.
 
 ### Step 1: Install the Agent (Required)
 
