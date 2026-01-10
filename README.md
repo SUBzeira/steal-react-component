@@ -27,22 +27,42 @@ Clone entire websites by combining component extraction, style extraction, and a
 
 ## Installation
 
-### As Claude Code Skills
+This skill uses a **two-file architecture** for token efficiency:
 
-Copy the skill files to your Claude Code skills directory:
+- **SKILL.md**: Lightweight dispatcher (~200 tokens) - loaded into main agent context
+- **AGENT.md**: Full extraction instructions (~4k tokens) - loaded only when subagent spawns
+
+This saves ~7k tokens per invocation compared to embedding all instructions in the skill.
+
+### Step 1: Install the Agent (Required)
+
+Copy `AGENT.md` to your Claude Code agents directory:
 
 ```bash
-# Clone the repo
-git clone https://github.com/dennisonbertram/steal-react-component.git
+# User-level (available in all projects)
+cp AGENT.md ~/.claude/agents/steal-react-component.md
 
-# Copy skills
-mkdir -p ~/.claude/skills/steal-react-component
-cp SKILL.md CSS-EXTRACTOR.md COPY-SITE.md ~/.claude/skills/steal-react-component/
+# Or project-level
+cp AGENT.md .claude/agents/steal-react-component.md
 ```
 
-### As a Claude Code Command
+### Step 2: Install the Skills
 
-Create a slash command for site cloning:
+Copy skill files to enable slash commands:
+
+```bash
+# User-level
+mkdir -p ~/.claude/skills/steal-react-component
+cp SKILL.md CSS-EXTRACTOR.md COPY-SITE.md ~/.claude/skills/steal-react-component/
+
+# Or project-level
+mkdir -p .claude/skills/steal-react-component
+cp SKILL.md CSS-EXTRACTOR.md COPY-SITE.md .claude/skills/steal-react-component/
+```
+
+### Optional: Install as Commands
+
+Create slash commands for site cloning:
 
 ```bash
 mkdir -p ~/.claude/commands
@@ -53,8 +73,8 @@ Now use `/copy-site https://target-site.com` to clone any site.
 
 ## Components
 
-### SKILL.md - ReactStealer
-The core component extraction tool:
+### SKILL.md + AGENT.md - ReactStealer
+The core component extraction tool (split for token efficiency):
 - Access React Fiber internals via `__reactFiber$*` keys
 - Extract component props, hooks, HTML, and minified source
 - Visual Navigator UI for interactive component browsing
@@ -98,7 +118,7 @@ Ready-to-use project templates:
 
 ## Requirements
 
-- Claude Code CLI
+- Claude Code CLI (started with `claude --chrome`)
 - Chrome browser with [Claude-in-Chrome](https://github.com/anthropics/claude-in-chrome) extension
 - Target website (React apps work best, any site works for style extraction)
 
@@ -114,6 +134,28 @@ Ready-to-use project templates:
 6. **LLM Reconstruction** - Feed examples + minified source to LLM
 7. **Project Scaffolding** - Generate complete Next.js project
 8. **Verification** - Compare rendered output until it matches
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Main Agent (opus/sonnet)                                    │
+│                                                             │
+│  SKILL.md loaded (~200 tokens)                              │
+│  ├─ Pre-flight check (Chrome MCP available?)                │
+│  └─ Dispatch to subagent                                    │
+│                                                             │
+│     ┌─────────────────────────────────────────────────────┐ │
+│     │ Subagent (sonnet)                                   │ │
+│     │                                                     │ │
+│     │  AGENT.md loaded (~4k tokens)                       │ │
+│     │  ├─ Navigate to target URL                          │ │
+│     │  ├─ Inject ReactStealer                             │ │
+│     │  ├─ Extract component data                          │ │
+│     │  └─ Reconstruct clean TypeScript                    │ │
+│     └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ### Workflow Comparison
 
@@ -136,6 +178,24 @@ Ready-to-use project templates:
 
 ## Example Output
 
+### Component Extraction
+```javascript
+// After injection, use ReactStealer API:
+
+// Get component summary
+ReactStealer.summary()
+// → { totalComponents: 89, components: [{ name: "Button", count: 15 }, ...] }
+
+// Extract specific component for LLM
+ReactStealer.getForLLM('Button')
+// → Formatted prompt with source + examples
+
+// Target specific element
+ReactStealer.getBySelector('button.primary')
+// → { name, props, hooks, renderedHTML, source }
+```
+
+### Site Cloning
 After running `/copy-site https://x.com`:
 
 ```
