@@ -1,93 +1,161 @@
 # Steal React Component
 
-A Claude Code skill that extracts and reconstructs React components from any production website using browser automation.
-
-## What It Does
-
-This skill allows you to "steal" React components from any website by:
-
-1. **Accessing React Fiber** - React attaches internal Fiber nodes to DOM elements
-2. **Extracting Component Data** - Gets component names, props, hooks, rendered HTML, and minified source
-3. **Collecting Examples** - Gathers multiple instances with different props
-4. **Reconstructing** - Uses LLM to recreate clean component code from examples
+A Claude Code skill suite for extracting and reconstructing React components and entire websites using browser automation.
 
 ## Features
 
-### ReactStealer API
-Programmatic extraction for bulk operations:
-- `ReactStealer.summary()` - List all components on page
-- `ReactStealer.extractAll()` - Full extraction with props, hooks, HTML, source
-- `ReactStealer.getBySelector('button')` - Get component for specific element
-- `ReactStealer.getForLLM('Button')` - Get LLM-formatted prompt for reconstruction
+### Component Extraction (`steal-react-component`)
+Extract individual React components from any production website by accessing React Fiber internals.
 
-### Visual Navigator UI
-Interactive component browser:
-- Browse component tree with instance counts
-- Hover over elements to identify components (Inspect mode)
-- Click to select and view props/source
-- One-click copy component data to clipboard
-- Draggable, minimizable panel
+### Design System Extraction (`css-extractor`)
+Extract complete design systems including CSS variables, typography, colors, and spacing.
+
+### Full Site Cloning (`copy-site`)
+Clone entire websites by combining component extraction, style extraction, and automatic project scaffolding.
+
+## Quick Start
+
+### Extract a Single Component
+```
+/steal-react-component https://example.com
+```
+
+### Clone an Entire Site
+```
+/copy-site https://example.com
+```
 
 ## Installation
 
-### As a Claude Code Skill
+### As Claude Code Skills
 
-Copy `SKILL.md` to your Claude Code skills directory:
+Copy the skill files to your Claude Code skills directory:
 
 ```bash
+# Clone the repo
+git clone https://github.com/dennisonbertram/steal-react-component.git
+
+# Copy skills
 mkdir -p ~/.claude/skills/steal-react-component
-cp SKILL.md ~/.claude/skills/steal-react-component/
+cp SKILL.md CSS-EXTRACTOR.md COPY-SITE.md ~/.claude/skills/steal-react-component/
 ```
 
-### Usage
+### As a Claude Code Command
 
-In Claude Code, just ask:
-- "Steal the Button component from https://example.com"
-- "Extract React components from this page"
-- "Show me the component tree for this site"
+Create a slash command for site cloning:
 
-Or use the skill directly:
+```bash
+mkdir -p ~/.claude/commands
+cp COPY-SITE.md ~/.claude/commands/copy-site.md
 ```
-/steal-react-component
+
+Now use `/copy-site https://target-site.com` to clone any site.
+
+## Components
+
+### SKILL.md - ReactStealer
+The core component extraction tool:
+- Access React Fiber internals via `__reactFiber$*` keys
+- Extract component props, hooks, HTML, and minified source
+- Visual Navigator UI for interactive component browsing
+- LLM-formatted output for clean code reconstruction
+
+```javascript
+// Inject ReactStealer, then:
+ReactStealer.summary()           // List all components
+ReactStealer.getForLLM('Button') // Get reconstruction prompt
 ```
+
+### CSS-EXTRACTOR.md - StyleStealer
+Design system extraction tool:
+- CSS custom properties (design tokens)
+- Typography system (fonts, sizes, weights)
+- Color palette with semantic naming
+- Direct Tailwind config generation
+
+```javascript
+// Inject StyleStealer, then:
+StyleStealer.extractAll()       // Get full design system
+StyleStealer.toTailwindConfig() // Generate Tailwind config
+StyleStealer.toCSSVariables()   // Export as CSS file
+```
+
+### COPY-SITE.md - Full Site Cloning
+End-to-end site cloning workflow:
+1. Screenshot and document the site
+2. Extract design system with StyleStealer
+3. Extract components with ReactStealer
+4. De-minify with parallel subagents
+5. Scaffold Next.js project
+6. Verify the clone matches original
+
+### templates/ - Project Scaffolding
+Ready-to-use project templates:
+- Next.js 14 with App Router
+- TypeScript configuration
+- Tailwind CSS with design token placeholders
+- Component structure
 
 ## Requirements
 
 - Claude Code CLI
 - Chrome browser with [Claude-in-Chrome](https://github.com/anthropics/claude-in-chrome) extension
-- Target website must be a React application
+- Target website (React apps work best, any site works for style extraction)
 
 ## How It Works
 
-### The Technique (inspired by [fant.io/react](https://fant.io/react/))
+### The Technique
 
 1. **Two Trees** - React maintains a Fiber tree parallel to the DOM
 2. **Fiber Access** - React attaches Fiber nodes via `__reactFiber$*` keys
 3. **Data Extraction** - Extract component type, props, hooks, rendered HTML
-4. **Example Collection** - Gather multiple prop→HTML mappings
-5. **LLM Reconstruction** - Feed examples + minified source to LLM
-6. **Verification** - Compare rendered output until it matches
+4. **Style Extraction** - Pull CSS variables, computed styles, typography
+5. **Example Collection** - Gather multiple prop→HTML mappings
+6. **LLM Reconstruction** - Feed examples + minified source to LLM
+7. **Project Scaffolding** - Generate complete Next.js project
+8. **Verification** - Compare rendered output until it matches
 
-### Limitations
+### Workflow Comparison
+
+| Feature | steal-react-component | copy-site |
+|---------|----------------------|-----------|
+| Scope | Individual components | Entire site |
+| Output | Component code | Full Next.js app |
+| Design System | Optional | Always extracted |
+| Automation | Interactive | End-to-end |
+| Use Case | Grab specific components | Clone entire UI |
+
+## Limitations
 
 - **Animations** - Snapshots may not match animated state
 - **Interactive State** - Dropdowns, modals may not capture correctly
 - **Minification** - Some component names are minified (e.g., `Hc`, `qv`)
 - **Server Components** - RSC may not have client-side Fiber data
+- **Authentication** - Protected pages require manual login first
+- **Non-React Sites** - Only style extraction works
 
-## Example
+## Example Output
 
-```javascript
-// Inject ReactStealer
-// ... (code from SKILL.md)
+After running `/copy-site https://x.com`:
 
-// Get component summary
-ReactStealer.summary()
-// → { totalComponents: 89, components: [{ name: "Button", count: 15 }, ...] }
-
-// Extract specific component for LLM
-ReactStealer.getForLLM('Button')
-// → Formatted prompt with source + examples
+```
+sites/
+└── x.com/
+    ├── README.md           # Site documentation
+    ├── style-guide.md      # Design system reference
+    └── app/
+        ├── package.json
+        ├── tailwind.config.ts
+        ├── app/
+        │   ├── layout.tsx
+        │   ├── page.tsx
+        │   └── globals.css
+        └── components/
+            ├── index.ts
+            ├── Sidebar.tsx
+            ├── Tweet.tsx
+            ├── TweetComposer.tsx
+            └── RightSidebar.tsx
 ```
 
 ## License
