@@ -27,29 +27,33 @@ Clone entire websites by combining component extraction, style extraction, and a
 
 ## Installation
 
-This skill uses a **two-file architecture** for context isolation:
+This skill suite uses a **two-file architecture** for context isolation:
 
-- **SKILL.md**: Lightweight dispatcher (~300 tokens) - loaded into main agent context
-- **AGENT.md**: Full extraction instructions (~4k tokens) - loaded only when subagent spawns
+| Skill | Dispatcher | Agent | Purpose |
+|-------|------------|-------|---------|
+| steal-react-component | SKILL.md (~300 tokens) | AGENT.md (~4k tokens) | Extract individual components |
+| copy-site | COPY-SITE.md (~400 tokens) | COPY-SITE-AGENT.md (~6k tokens) | Clone entire websites |
 
 ### Why Subagent Architecture?
 
-The subagent runs in isolated context, keeping the main agent's context clean. A typical extraction:
+The subagent runs in isolated context, keeping the main agent's context clean. A typical site clone:
 - **Main agent**: ~6k tokens (dispatcher + subagent response summary)
-- **Subagent**: ~36k tokens internally (browser automation, React introspection, reconstruction)
+- **Subagent**: ~50k tokens internally (browser automation, style extraction, component de-minification, project scaffolding)
 
-Without the subagent, all ~36k tokens would accumulate in the main agent's context, quickly filling it up after a few extractions.
+Without subagents, all ~50k tokens would accumulate in the main agent's context, quickly filling it up.
 
-### Step 1: Install the Agent (Required)
+### Step 1: Install the Agents (Required)
 
-Copy `AGENT.md` to your Claude Code agents directory:
+Copy agent files to your Claude Code agents directory:
 
 ```bash
 # User-level (available in all projects)
 cp AGENT.md ~/.claude/agents/steal-react-component.md
+cp COPY-SITE-AGENT.md ~/.claude/agents/copy-site.md
 
 # Or project-level
 cp AGENT.md .claude/agents/steal-react-component.md
+cp COPY-SITE-AGENT.md .claude/agents/copy-site.md
 ```
 
 ### Step 2: Install the Skills
@@ -106,8 +110,8 @@ StyleStealer.toTailwindConfig() // Generate Tailwind config
 StyleStealer.toCSSVariables()   // Export as CSS file
 ```
 
-### COPY-SITE.md - Full Site Cloning
-End-to-end site cloning workflow:
+### COPY-SITE.md + COPY-SITE-AGENT.md - Full Site Cloning
+End-to-end site cloning workflow (split for context isolation):
 1. Screenshot and document the site
 2. Extract design system with StyleStealer
 3. Extract components with ReactStealer
@@ -147,19 +151,22 @@ Ready-to-use project templates:
 ┌─────────────────────────────────────────────────────────────┐
 │ Main Agent (opus/sonnet)                                    │
 │                                                             │
-│  SKILL.md loaded (~200 tokens)                              │
+│  Dispatcher loaded (~300-400 tokens)                        │
 │  ├─ Pre-flight check (Chrome MCP available?)                │
-│  └─ Dispatch to subagent                                    │
+│  └─ Dispatch to appropriate subagent                        │
 │                                                             │
-│     ┌─────────────────────────────────────────────────────┐ │
-│     │ Subagent (sonnet)                                   │ │
-│     │                                                     │ │
-│     │  AGENT.md loaded (~4k tokens)                       │ │
-│     │  ├─ Navigate to target URL                          │ │
-│     │  ├─ Inject ReactStealer                             │ │
-│     │  ├─ Extract component data                          │ │
-│     │  └─ Reconstruct clean TypeScript                    │ │
-│     └─────────────────────────────────────────────────────┘ │
+│  ┌───────────────────────┐  ┌────────────────────────────┐  │
+│  │ steal-react-component │  │ copy-site                  │  │
+│  │ Subagent (sonnet)     │  │ Subagent (sonnet)          │  │
+│  │                       │  │                            │  │
+│  │ AGENT.md (~4k tokens) │  │ COPY-SITE-AGENT.md (~6k)   │  │
+│  │ ├─ Navigate           │  │ ├─ Screenshot site         │  │
+│  │ ├─ Inject ReactStealer│  │ ├─ Extract design system   │  │
+│  │ ├─ Extract component  │  │ ├─ Extract components      │  │
+│  │ └─ Reconstruct code   │  │ ├─ De-minify (parallel)    │  │
+│  └───────────────────────┘  │ ├─ Scaffold Next.js        │  │
+│                             │ └─ Test & verify           │  │
+│                             └────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
