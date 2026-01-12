@@ -1,0 +1,42 @@
+'use client';
+
+import { useState } from 'react';
+// Import your extracted components
+// import { Header, Sidebar, MainContent, Footer } from '@/components';
+
+export default function Home() {
+  // Add state management as needed
+  // const [activeTab, setActiveTab] = useState('default');
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Layout structure from {{SITE_URL}} */}
+
+      {/* Left Sidebar (if applicable) */}
+      {/* <aside className="sticky top-0 h-screen hidden lg:block">
+        <Sidebar />
+      </aside> */}
+
+      {/* Main Content */}
+      <main className="flex-1">
+        {/* Header */}
+        {/* <Header /> */}
+
+        {/* Content Area */}
+        <div className="p-4">
+          <h1 className="text-2xl font-bold">{{SITE_TITLE}} Clone</h1>
+          <p className="text-muted mt-2">
+            This is a clone of {{SITE_URL}} created using steal-react-component.
+          </p>
+
+          {/* Add your extracted components here */}
+        </div>
+      </main>
+
+      {/* Right Sidebar (if applicable) */}
+      {/* <aside className="sticky top-0 h-screen hidden xl:block">
+        <RightSidebar />
+      </aside> */}
+    </div>
+  );
+}

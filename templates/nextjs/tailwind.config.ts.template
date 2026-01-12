@@ -1,0 +1,41 @@
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // {{COLORS}}
+        // Example:
+        // 'primary': '#1d9bf0',
+        // 'background': '#000000',
+        // 'foreground': '#e6e9ea',
+      },
+      fontFamily: {
+        // {{FONTS}}
+        // Example:
+        // sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        // {{FONT_SIZES}}
+        // Example:
+        // '13': '13px',
+        // '15': '15px',
+        // '17': '17px',
+        // '20': '20px',
+      },
+      spacing: {
+        // {{SPACING}}
+        // Example:
+        // '18': '72px',
+        // '88': '352px',
+      },
+    },
+  },
+  plugins: [],
+};
+
+export default config;
